@@ -1,76 +1,32 @@
-exports.handler = async (event, context) => {
-    // 请将此处修改为你允许的域名，例如 'https://example.com'
-    const corsHeaders = {
-        'Access-Control-Allow-Origin': 'https://pic.re',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, User-Agent'
-    };
+exports.handler = async (event) => {
+  // 允许的域名列表（安全白名单）
+  const allowedOrigins = [
+    "https://doc.pic.re"
+  ];
+  
+  const origin = event.headers.origin;
+  const isAllowedOrigin = allowedOrigins.includes(origin);
 
-    const requestOrigin = event.headers?.origin || event.headers?.Origin;
-    // 请将此处修改为你允许的域名，例如 'https://example.com'
-    if (requestOrigin && requestOrigin !== 'https://pic.re') {
-        return {
-            statusCode: 403,
-            headers: {
-                'Content-Type': 'text/plain'
-            },
-            body: 'Forbidden - Origin not allowed'
-        };
-    }
+  // 动态设置允许的 Origin
+  const headers = {
+    "Access-Control-Allow-Origin": isAllowedOrigin ? origin : "",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization"
+  };
 
-    if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 204,
-            headers: corsHeaders,
-            body: ''
-        };
-    }
-    else if (event.httpMethod === "POST") {
-        const { name } = JSON.parse(event.body);
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({ message: "Hello, " + name }),
-        };
-    }
+  // 处理预检请求
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers, body: "" }; // 204 No Content
+  }
 
-
-    if (event.httpMethod !== 'GET') {
-        return {
-            statusCode: 405,
-            headers: corsHeaders,
-            body: 'Method not allowed'
-        };
-    }
-
-    const targetUrl = event.queryStringParameters.url;
-    if (!targetUrl) {
-        return {
-            statusCode: 400,
-            headers: corsHeaders,
-            body: 'Missing URL parameter'
-        };
-    }
-
-    try {
-        const headers = {
-            'User-Agent': event.headers['user-agent'] || ''
-        };
-        const response = await fetch(targetUrl, { headers });
-        const data = await response.text();
-        return {
-            statusCode: response.status,
-            headers: {
-                ...corsHeaders,
-                'Content-Type': response.headers.get('Content-Type') || 'text/plain'
-            },
-            body: data
-        };
-    } catch (error) {
-        return {
-            statusCode: 500,
-            headers: corsHeaders,
-            body: JSON.stringify({ error: error.message })
-        };
-    }
+  // 处理真实请求
+  return {
+    statusCode: 200,
+    headers: {
+      ...headers,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ data: "Authenticated CORS success!" })
+  };
 };
