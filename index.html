@@ -206,7 +206,7 @@
         }
 
         .tag .remove {
-            margin-left: 8px;
+            margin-left: 12px;
             cursor: pointer;
             opacity: 0.7;
             transition: opacity 0.2s;
@@ -626,14 +626,14 @@
                 availableTags.splice(randomIndex, 1);
             }
 
+            selectedTags = [];
+
             // 添加随机标签到已选标签
             randomTags.forEach(tag => {
                 if (!selectedTags.includes(tag.name)) {
                     selectedTags.push(tag.name);
                 }
             });
-
-
 
             updateTagsDisplay();
             showNotification(`随机选择了 ${randomTags.length} 个标签`, true);
@@ -715,7 +715,7 @@
                 let images = [];
 
                 for (let i = 0; i < count; i++) {
-                    let url = `${apiUrl}/images.json?compress=${compress}&max_size=${maxSize}`;
+                    let url = `${apiUrl}/image?compress=${compress}&max_size=${maxSize}`;
 
                     if (withTags && selectedTags.length > 0) {
                         const tagsParam = selectedTags.join(',');
@@ -752,20 +752,25 @@
             imagesContainer.innerHTML = '';
 
             images.forEach(img => {
+                // 假设 img 包含二进制图片数据
+                const blob = new Blob([img.data], { type: 'image/jpeg' });
+                const imageUrl = URL.createObjectURL(blob);
+
                 const imageCard = document.createElement('div');
                 imageCard.className = 'image-card';
 
                 imageCard.innerHTML = `
-                    <img src="${img.url}" alt="随机图片">
-                    <div class="image-info">
-                        <div>ID: ${img.id}</div>
-                        <div class="image-id">尺寸: ${img.width}×${img.height}</div>
-                    </div>
-                `;
+            <img src="${imageUrl}" alt="图片">
+            <div class="image-info">
+                <div>ID: ${img.image_id}</div>
+                <div>标签: ${img.image_tags}</div>
+            </div>
+        `;
 
                 imagesContainer.appendChild(imageCard);
             });
         }
+
 
         // 标签切换功能
         document.querySelectorAll('.tab').forEach(tab => {
@@ -782,29 +787,29 @@
         });
 
         // 添加标签功能（示例）
-        document.addEventListener('click', (e) => {
-            if (e.target === selectedTagsContainer && allTags.length > 0) {
-                const availableTags = allTags.filter(tag =>
-                    !selectedTags.includes(tag) && !excludedTags.includes(tag));
+        // document.addEventListener('click', (e) => {
+        //     if (e.target === selectedTagsContainer && allTags.length > 0) {
+        //         const availableTags = allTags.filter(tag =>
+        //             !selectedTags.includes(tag) && !excludedTags.includes(tag));
 
-                if (availableTags.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * availableTags.length);
-                    selectedTags.push(availableTags[randomIndex]);
-                    updateTagsDisplay();
-                }
-            }
+        //         if (availableTags.length > 0) {
+        //             const randomIndex = Math.floor(Math.random() * availableTags.length);
+        //             selectedTags.push(availableTags[randomIndex]);
+        //             updateTagsDisplay();
+        //         }
+        //     }
 
-            if (e.target === excludedTagsContainer && allTags.length > 0) {
-                const availableTags = allTags.filter(tag =>
-                    !selectedTags.includes(tag) && !excludedTags.includes(tag));
+        //     if (e.target === excludedTagsContainer && allTags.length > 0) {
+        //         const availableTags = allTags.filter(tag =>
+        //             !selectedTags.includes(tag) && !excludedTags.includes(tag));
 
-                if (availableTags.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * availableTags.length);
-                    excludedTags.push(availableTags[randomIndex]);
-                    updateTagsDisplay();
-                }
-            }
-        });
+        //         if (availableTags.length > 0) {
+        //             const randomIndex = Math.floor(Math.random() * availableTags.length);
+        //             excludedTags.push(availableTags[randomIndex]);
+        //             updateTagsDisplay();
+        //         }
+        //     }
+        // });
 
         // 初始化
         updateTagsDisplay();
