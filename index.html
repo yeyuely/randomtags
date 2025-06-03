@@ -715,7 +715,7 @@
                 let images = [];
 
                 for (let i = 0; i < count; i++) {
-                    let url = `${apiUrl}/image?compress=${compress}&max_size=${maxSize}`;
+                    let url = `${apiUrl}/image.json?compress=${compress}&max_size=${maxSize}`;
 
                     if (withTags && selectedTags.length > 0) {
                         const tagsParam = selectedTags.join(',');
@@ -733,8 +733,8 @@
                         throw new Error('获取图片失败');
                     }
 
-                    // const imageData = await response.json();
-                    images.push(response);
+                    const imageData = await response.json();
+                    images.push(imageData);
                 }
 
                 imagesContainer.innerHTML = '';
@@ -752,34 +752,30 @@
         }
 
         // 显示图片
-        async function displayImages(image) {
-            // 从响应头获取图片信息
-            const imageId = image.headers.get('image_id');
-            const imageTags = image.headers.get('image_tags');
-            const imageSource = image.headers.get('image_source');
+        async function displayImages(imageData) {
+            // 解析 JSON 数据
+            const data = await imageData.json();
 
-            // 获取图片二进制数据
-            const blob = await image.blob();
-
-            // 检查 blob 是否有效
-            if (!blob) {
-                throw new Error('Blob 数据无效');
-            }
-
-            const imageUrl = URL.createObjectURL(blob);
+            // 从 JSON 中获取图片信息
+            const imageId = data._id || '未定义';
+            const imageTags = data.tags ? data.tags.join(', ') : '未定义';
+            const imageSource = data.source || '#';
+            const imageUrl = data.file_url;
 
             // 创建图片元素
             const imageCard = document.createElement('div');
             imageCard.className = 'image-card';
 
             imageCard.innerHTML = `
-            <img src="${imageUrl}" alt="图片">
-            <div class="image-info">
-                <div>ID: ${imageId || '未定义'}</div>
-                <div>标签: ${imageTags || '未定义'}</div>
-                <div>来源: <a href="${imageSource}" target="_blank">查看来源</a></div>
-            </div>
-        `;
+        <img src="${imageUrl}" alt="图片" onerror="this.src='fallback.jpg'">
+        <div class="image-info">
+            <div>ID: ${imageId}</div>
+            <div>标签: ${imageTags}</div>
+            <div>来源: <a href="${imageSource}" target="_blank">查看来源</a></div>
+            <div>尺寸: ${data.width}×${data.height}</div>
+            <div>作者: ${data.author || '未知'}</div>
+        </div>
+    `;
 
             imagesContainer.appendChild(imageCard);
         }
