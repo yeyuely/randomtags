@@ -762,12 +762,16 @@
             const imageSource = data.source || '#';
             const imageUrl = data.file_url;
 
-            // 创建图片元素
+            // 创建图片元素容器
             const imageCard = document.createElement('div');
             imageCard.className = 'image-card';
 
+            // 使用代理获取图片
+            const proxyUrl = `/.netlify/functions/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+
             imageCard.innerHTML = `
-        <img src="${imageUrl}" alt="图片" onerror="this.src='fallback.jpg'">
+        <img src="${proxyUrl}" alt="图片" loading="lazy" 
+             onerror="this.onerror=null;this.src='fallback.jpg';">
         <div class="image-info">
             <div>ID: ${imageId}</div>
             <div>标签: ${imageTags}</div>
