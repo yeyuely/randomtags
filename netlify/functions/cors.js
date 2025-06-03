@@ -1,7 +1,8 @@
 exports.handler = async (event) => {
   // 允许的域名列表（安全白名单）
   const allowedOrigins = [
-    "https://pic.re"
+    "https://pic.re",
+    "https://konachan.com"
   ];
   
   const origin = event.headers.origin;
