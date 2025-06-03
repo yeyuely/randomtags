@@ -759,6 +759,12 @@
 
                 // 获取图片二进制数据
                 const blob = img.blob();
+
+                // 检查 blob 是否有效
+                if (!blob) {
+                    throw new Error('Blob 数据无效');
+                }
+
                 const imageUrl = URL.createObjectURL(blob);
 
                 // 创建图片元素
