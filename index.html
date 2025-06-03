@@ -1,374 +1,530 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>随机动漫图片接口 - 完整解决方案</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机动漫图片浏览器 - 完整解决方案</title>
     <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --dark: #2d3436;
+            --light: #f7f7f7;
+            --success: #00b894;
+            --danger: #ff7675;
+            --warning: #fdcb6e;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
             line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
-            background: #f8f9fa;
-            color: #333;
         }
-        .header {
+        
+        header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #dee2e6;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
-        .container {
-            display: flex;
-            flex-wrap: wrap;
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--dark);
+            opacity: 0.8;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 30px;
+            margin-bottom: 30px;
         }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
         .panel {
-            flex: 1;
-            min-width: 300px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
             padding: 25px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s ease;
         }
+        
+        .panel:hover {
+            transform: translateY(-5px);
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary);
+        }
+        
         .image-container {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        #displayImage {
-            max-width: 100%;
-            max-height: 70vh;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            background: #f0f2f5;
-            min-height: 300px;
+            position: relative;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            min-height: 400px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #6c757d;
-            font-style: italic;
         }
+        
+        #displayImage {
+            max-width: 100%;
+            max-height: 70vh;
+            display: block;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loader {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(108, 92, 231, 0.2);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
         .controls {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
-            margin: 20px 0;
+            margin: 25px 0;
         }
-        button {
+        
+        .btn {
             padding: 12px 20px;
-            background: #4361ee;
-            color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
-            flex: 1;
-            min-width: 150px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        button:hover {
-            background: #3a56e4;
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px rgba(108, 92, 231, 0.3);
         }
+        
+        .btn-primary:hover {
+            background: #5a4dcf;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(108, 92, 231, 0.4);
+        }
+        
         .btn-secondary {
-            background: #6c757d;
+            background: var(--secondary);
+            color: white;
         }
+        
         .btn-secondary:hover {
-            background: #5a6268;
+            background: #8d7dff;
+            transform: translateY(-2px);
         }
-        .metadata {
-            margin-top: 25px;
-        }
-        .metadata-item {
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .metadata-item h3 {
-            margin-bottom: 8px;
-            color: #495057;
-            font-size: 18px;
-        }
-        .metadata-value {
-            font-size: 16px;
-            word-break: break-all;
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .url-display {
-            background: #e9ecef;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 20px 0;
-            font-size: 14px;
-            word-break: break-all;
-        }
-        .error {
-            color: #dc3545;
-            background: #fff5f5;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-            border-left: 4px solid #dc3545;
-        }
-        .success {
-            color: #28a745;
-            background: #f0fff4;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-            border-left: 4px solid #28a745;
-        }
-        .debug-info {
-            background: #eef7ff;
-            padding: 15px;
-            border-radius: 6px;
+        
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
             margin-top: 20px;
-            font-size: 14px;
         }
-        .debug-info h3 {
-            margin-top: 0;
+        
+        .metadata-card {
+            background: rgba(108, 92, 231, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid var(--primary);
         }
-        textarea {
-            width: 100%;
-            min-height: 100px;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
+        
+        .metadata-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .metadata-value {
+            font-size: 1.1rem;
+            word-break: break-all;
+        }
+        
+        .url-display {
+            background: rgba(162, 155, 254, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+            overflow-wrap: break-word;
+            border: 1px dashed var(--secondary);
+        }
+        
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: rgba(0, 184, 148, 0.2);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+        
+        .error {
+            background: rgba(255, 118, 117, 0.2);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+        
+        .debug-panel {
+            margin-top: 30px;
+        }
+        
+        .debug-content {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
             font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: var(--dark);
+            opacity: 0.7;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>随机动漫图片接口</h1>
-        <p>直接从 <code>pic.re</code> 获取随机动漫图片及元数据</p>
-    </div>
-
     <div class="container">
-        <div class="panel">
-            <div class="image-container">
-                <div id="displayImage">图片将在此处显示</div>
-            </div>
-            
-            <div class="controls">
-                <button id="loadImageBtn">加载随机图片</button>
-                <button id="showUrlBtn" class="btn-secondary">显示API URL</button>
-                <button id="viewSourceBtn" class="btn-secondary">查看来源</button>
-            </div>
-            
-            <div class="url-display" id="apiUrlDisplay" style="display:none;">
-                <strong>API URL:</strong> <span id="apiUrl"></span>
-            </div>
-            
-            <div class="metadata">
-                <div class="metadata-item">
-                    <h3>图片 ID</h3>
-                    <div class="metadata-value" id="imageId">未加载</div>
+        <header>
+            <h1>随机动漫图片浏览器</h1>
+            <p class="subtitle">直接访问 pic.re 接口获取高质量动漫图片</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="panel">
+                <h2 class="panel-title">图片预览</h2>
+                
+                <div class="image-container">
+                    <div class="loader" id="loader"></div>
+                    <img id="displayImage" alt="随机动漫图片">
                 </div>
                 
-                <div class="metadata-item">
-                    <h3>图片来源</h3>
-                    <div class="metadata-value" id="imageSource">未加载</div>
+                <div class="controls">
+                    <button id="loadImageBtn" class="btn btn-primary">
+                        <i>🔄</i> 加载新图片
+                    </button>
+                    <button id="showUrlBtn" class="btn btn-secondary">
+                        <i>🔗</i> 显示API URL
+                    </button>
+                    <button id="downloadBtn" class="btn btn-secondary">
+                        <i>💾</i> 下载图片
+                    </button>
                 </div>
                 
-                <div class="metadata-item">
-                    <h3>图片标签</h3>
-                    <div class="metadata-value" id="imageTags">未加载</div>
+                <div class="url-display" id="apiUrlDisplay" style="display:none;">
+                    <strong>API URL:</strong> <span id="apiUrl"></span>
                 </div>
                 
-                <div class="metadata-item">
-                    <h3>图片类型</h3>
-                    <div class="metadata-value" id="imageType">未加载</div>
-                </div>
-                
-                <div class="metadata-item">
-                    <h3>图片大小</h3>
-                    <div class="metadata-value" id="imageSize">未加载</div>
+                <div id="statusMessage" class="status-message">
+                    点击"加载新图片"按钮开始
                 </div>
             </div>
             
-            <div id="statusMessage"></div>
+            <div class="panel">
+                <h2 class="panel-title">图片信息</h2>
+                
+                <div class="metadata-grid">
+                    <div class="metadata-card">
+                        <div class="metadata-label">图片 ID</div>
+                        <div class="metadata-value" id="imageId">未获取</div>
+                    </div>
+                    
+                    <div class="metadata-card">
+                        <div class="metadata-label">图片来源</div>
+                        <div class="metadata-value" id="imageSource">未获取</div>
+                    </div>
+                    
+                    <div class="metadata-card">
+                        <div class="metadata-label">图片标签</div>
+                        <div class="metadata-value" id="imageTags">未获取</div>
+                    </div>
+                    
+                    <div class="metadata-card">
+                        <div class="metadata-label">图片类型</div>
+                        <div class="metadata-value" id="imageType">未获取</div>
+                    </div>
+                    
+                    <div class="metadata-card">
+                        <div class="metadata-label">图片大小</div>
+                        <div class="metadata-value" id="imageSize">未获取</div>
+                    </div>
+                    
+                    <div class="metadata-card">
+                        <div class="metadata-label">请求ID</div>
+                        <div class="metadata-value" id="requestId">未获取</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h3 class="panel-title">标签筛选</h3>
+                    <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-secondary tag-btn" data-tags="loli,landscape">萝莉+风景</button>
+                        <button class="btn btn-secondary tag-btn" data-tags="anime,scenic">动漫+风景</button>
+                        <button class="btn btn-secondary tag-btn" data-tags="cute,fantasy">可爱+奇幻</button>
+                        <button class="btn btn-secondary tag-btn" data-tags="detailed">高清细节</button>
+                    </div>
+                </div>
+            </div>
         </div>
         
-        <div class="panel">
-            <h2>调试信息</h2>
-            <div class="debug-info">
-                <h3>响应头信息</h3>
-                <textarea id="headersInfo" readonly></textarea>
+        <div class="panel debug-panel">
+            <h2 class="panel-title">调试信息</h2>
+            <div class="debug-content" id="debugInfo">
+                调试信息将在此处显示...
             </div>
-            
-            <div class="debug-info">
-                <h3>请求参数</h3>
-                <div>
-                    <label>
-                        <input type="checkbox" id="compressCheckbox" checked> 
-                        compress=true
-                    </label>
-                </div>
-                <div>
-                    <label>
-                        <input type="checkbox" id="maxSizeCheckbox" checked> 
-                        max_size=4096
-                    </label>
-                </div>
-                <div>
-                    <label>
-                        <input type="checkbox" id="tagsCheckbox" checked> 
-                        in=loli,landscape
-                    </label>
-                </div>
-            </div>
-            
-            <div class="debug-info">
-                <h3>注意事项</h3>
-                <ul>
-                    <li>确保URL参数格式正确：参数间使用<code>&amp;</code>分隔</li>
-                    <li>响应头中的元数据需要正确暴露才能被JavaScript读取</li>
-                    <li>图片加载可能需要几秒钟时间，请耐心等待</li>
-                    <li>如果遇到CORS问题，请尝试使用代理或本地环境</li>
-                </ul>
-            </div>
+        </div>
+        
+        <div class="footer">
+            <p>随机动漫图片服务由 pic.re 提供 | 代理服务通过 Netlify Functions 实现</p>
+            <p>本界面仅用于技术演示目的</p>
         </div>
     </div>
 
     <script>
-        // DOM元素引用
-        const displayImage = document.getElementById('displayImage');
-        const loadImageBtn = document.getElementById('loadImageBtn');
-        const showUrlBtn = document.getElementById('showUrlBtn');
-        const viewSourceBtn = document.getElementById('viewSourceBtn');
-        const apiUrlDisplay = document.getElementById('apiUrlDisplay');
-        const apiUrlSpan = document.getElementById('apiUrl');
-        const imageId = document.getElementById('imageId');
-        const imageSource = document.getElementById('imageSource');
-        const imageTags = document.getElementById('imageTags');
-        const imageType = document.getElementById('imageType');
-        const imageSize = document.getElementById('imageSize');
-        const headersInfo = document.getElementById('headersInfo');
-        const statusMessage = document.getElementById('statusMessage');
-        const compressCheckbox = document.getElementById('compressCheckbox');
-        const maxSizeCheckbox = document.getElementById('maxSizeCheckbox');
-        const tagsCheckbox = document.getElementById('tagsCheckbox');
+        // 全局元素引用
+        const elements = {
+            displayImage: document.getElementById('displayImage'),
+            loadImageBtn: document.getElementById('loadImageBtn'),
+            showUrlBtn: document.getElementById('showUrlBtn'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            apiUrlDisplay: document.getElementById('apiUrlDisplay'),
+            apiUrl: document.getElementById('apiUrl'),
+            imageId: document.getElementById('imageId'),
+            imageSource: document.getElementById('imageSource'),
+            imageTags: document.getElementById('imageTags'),
+            imageType: document.getElementById('imageType'),
+            imageSize: document.getElementById('imageSize'),
+            requestId: document.getElementById('requestId'),
+            statusMessage: document.getElementById('statusMessage'),
+            debugInfo: document.getElementById('debugInfo'),
+            loader: document.getElementById('loader'),
+            tagButtons: document.querySelectorAll('.tag-btn')
+        };
+
+        // 当前配置
+        let currentConfig = {
+            tags: 'loli,landscape',
+            compress: true,
+            max_size: 4096
+        };
+
+        // 初始化
+        function init() {
+            // 添加事件监听
+            elements.loadImageBtn.addEventListener('click', loadImage);
+            elements.showUrlBtn.addEventListener('click', toggleApiUrlDisplay);
+            elements.downloadBtn.addEventListener('click', downloadImage);
+            
+            // 标签按钮事件
+            elements.tagButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentConfig.tags = btn.dataset.tags;
+                    updateStatus(`已切换标签: ${currentConfig.tags}`, 'success');
+                    loadImage();
+                });
+            });
+            
+            // 初始加载图片
+            loadImage();
+        }
 
         // 加载图片函数
         async function loadImage() {
             try {
-                // 重置状态
-                displayImage.innerHTML = "加载中...";
-                statusMessage.innerHTML = "";
-                headersInfo.value = "";
+                // 显示加载状态
+                showLoader(true);
+                resetMetadata();
+                updateStatus('正在请求图片数据...', 'success');
                 
-                // 构建URL参数
-                const params = [];
-                if (compressCheckbox.checked) params.push('compress=true');
-                if (maxSizeCheckbox.checked) params.push('max_size=4096');
-                if (tagsCheckbox.checked) params.push('in=loli,landscape');
+                // 构建目标URL
+                const params = [
+                    `compress=${currentConfig.compress}`,
+                    `max_size=${currentConfig.max_size}`,
+                    `in=${encodeURIComponent(currentConfig.tags)}`
+                ].join('&');
                 
-                // 构建目标URL - 关键修复：使用 & 而不是 ? 连接参数
-                const targetUrl = `https://pic.re/image${params.length ? '?' : ''}${params.join('&')}`;
+                const targetUrl = `https://pic.re/image?${params}`;
+                
+                // 使用代理请求 - 添加时间戳防止缓存
+                const timestamp = new Date().getTime();
+                const proxyUrl = `https://venerable-moonbeam-0ba3bf.netlify.app/.netlify/functions/cors?url=${encodeURIComponent(targetUrl)}&_=${timestamp}`;
                 
                 // 显示API URL
-                apiUrlSpan.textContent = targetUrl;
+                elements.apiUrl.textContent = proxyUrl;
                 
-                // 添加时间戳防止缓存
-                const timestamp = new Date().getTime();
-                const urlWithCacheBust = `${targetUrl}&_=${timestamp}`;
-                
-                // 使用代理请求
-                const proxyUrl = `https://venerable-moonbeam-0ba3bf.netlify.app/.netlify/functions/cors?url=${encodeURIComponent(urlWithCacheBust)}`;
-                
-                // 显示状态
-                statusMessage.innerHTML = `<div class="success">正在请求图片数据...</div>`;
-                
-                // 发送请求
-                const response = await fetch(proxyUrl, {
-                    headers: {
-                        'Referer': 'https://pic.re/',
-                        'Accept': 'image/*'
-                    }
-                });
-                
-                // 检查响应状态
-                if (!response.ok) {
-                    throw new Error(`HTTP错误! 状态: ${response.status} ${response.statusText}`);
-                }
-                
-                // 获取响应头信息
-                const headers = [];
-                for (const [key, value] of response.headers.entries()) {
-                    headers.push(`${key}: ${value}`);
-                }
-                headersInfo.value = headers.join('\n');
-                
-                // 获取元数据 - 直接从响应头获取
-                const imageIdValue = response.headers.get('image_id') || '未提供';
-                const imageSourceValue = response.headers.get('image_source') || '未提供';
-                const imageTagsValue = response.headers.get('image_tags') || '未提供';
-                
-                // 更新元数据显示
-                imageId.textContent = imageIdValue;
-                imageSource.textContent = imageSourceValue;
-                imageTags.textContent = imageTagsValue;
-                
-                // 获取图片数据
-                const blob = await response.blob();
-                
-                // 更新图片信息
-                imageType.textContent = blob.type || '未知类型';
-                imageSize.textContent = `${Math.round(blob.size / 1024)} KB`;
-                
-                // 创建并显示图片
-                const url = URL.createObjectURL(blob);
+                // 创建图片加载器
                 const img = new Image();
                 
+                // 图片加载成功处理
                 img.onload = () => {
-                    // 清理旧的显示内容
-                    displayImage.innerHTML = '';
-                    displayImage.appendChild(img);
-                    URL.revokeObjectURL(url); // 释放内存
+                    // 更新显示
+                    elements.displayImage.src = img.src;
+                    showLoader(false);
                     
-                    // 更新状态
-                    statusMessage.innerHTML = `<div class="success">图片加载成功! (${imageType.textContent}, ${imageSize.textContent})</div>`;
+                    // 更新元数据
+                    elements.imageType.textContent = 'image/webp';
+                    elements.imageSize.textContent = '未知大小';
+                    
+                    updateStatus('图片加载成功!', 'success');
+                    updateDebugInfo(`图片加载成功: ${img.width}×${img.height} 像素`);
                 };
                 
-                img.onerror = () => {
-                    displayImage.innerHTML = `<div class="error">图片加载失败</div>`;
-                    statusMessage.innerHTML = `<div class="error">无法加载图片数据</div>`;
+                // 图片加载错误处理
+                img.onerror = (e) => {
+                    showLoader(false);
+                    updateStatus(`图片加载失败: ${e.message}`, 'error');
+                    updateDebugInfo(`图片加载错误: ${e.toString()}`);
                 };
                 
-                img.src = url;
+                // 设置图片源
+                img.crossOrigin = "Anonymous";
+                img.src = proxyUrl;
                 
             } catch (error) {
-                console.error('加载失败:', error);
-                displayImage.innerHTML = `<div class="error">错误: ${error.message}</div>`;
-                statusMessage.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
+                showLoader(false);
+                updateStatus(`请求失败: ${error.message}`, 'error');
+                updateDebugInfo(`错误详情: ${error.toString()}`);
             }
         }
 
-        // 显示API URL
-        function showApiUrl() {
-            apiUrlDisplay.style.display = apiUrlDisplay.style.display === 'none' ? 'block' : 'none';
-        }
-
-        // 查看图片来源
-        function viewSource() {
-            const sourceUrl = imageSource.textContent;
-            if (sourceUrl && sourceUrl !== '未提供') {
-                window.open(sourceUrl, '_blank');
-            } else {
-                alert('当前没有可用的图片来源信息');
+        // 下载图片
+        function downloadImage() {
+            if (!elements.displayImage.src) {
+                updateStatus('没有可下载的图片', 'error');
+                return;
+            }
+            
+            try {
+                // 创建下载链接
+                const link = document.createElement('a');
+                link.href = elements.displayImage.src;
+                
+                // 生成文件名
+                const date = new Date();
+                const timestamp = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}_${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}`;
+                link.download = `anime_image_${timestamp}.webp`;
+                
+                // 触发下载
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                updateStatus('图片下载已开始', 'success');
+                
+            } catch (error) {
+                updateStatus(`下载失败: ${error.message}`, 'error');
             }
         }
 
-        // 事件监听器
-        loadImageBtn.addEventListener('click', loadImage);
-        showUrlBtn.addEventListener('click', showApiUrl);
-        viewSourceBtn.addEventListener('click', viewSource);
-        
-        // 初始加载一次图片
-        loadImage();
+        // 显示/隐藏API URL
+        function toggleApiUrlDisplay() {
+            elements.apiUrlDisplay.style.display = 
+                elements.apiUrlDisplay.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // 重置元数据显示
+        function resetMetadata() {
+            elements.imageId.textContent = '未获取';
+            elements.imageSource.textContent = '未获取';
+            elements.imageTags.textContent = '未获取';
+            elements.imageType.textContent = '未获取';
+            elements.imageSize.textContent = '未获取';
+            elements.requestId.textContent = '未获取';
+        }
+
+        // 更新状态消息
+        function updateStatus(message, type = 'success') {
+            elements.statusMessage.textContent = message;
+            elements.statusMessage.className = `status-message ${type}`;
+        }
+
+        // 更新调试信息
+        function updateDebugInfo(info) {
+            const timestamp = new Date().toLocaleTimeString();
+            elements.debugInfo.innerHTML += `[${timestamp}] ${info}<br>`;
+            elements.debugInfo.scrollTop = elements.debugInfo.scrollHeight;
+        }
+
+        // 显示/隐藏加载动画
+        function showLoader(show) {
+            elements.loader.style.display = show ? 'block' : 'none';
+            elements.displayImage.style.opacity = show ? '0.3' : '1';
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
