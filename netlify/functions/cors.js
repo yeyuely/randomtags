@@ -8,7 +8,7 @@ exports.handler = async (event, context) => {
 
     const requestOrigin = event.headers?.origin || event.headers?.Origin;
     // 请将此处修改为你允许的域名，例如 'https://example.com'
-    if (requestOrigin && requestOrigin!== 'https://pic.re') {
+    if (requestOrigin && requestOrigin !== 'https://pic.re') {
         return {
             statusCode: 403,
             headers: {
@@ -25,8 +25,17 @@ exports.handler = async (event, context) => {
             body: ''
         };
     }
+    else if (event.httpMethod === "POST") {
+        const { name } = JSON.parse(event.body);
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ message: "Hello, " + name }),
+        };
+    }
 
-    if (event.httpMethod!== 'GET') {
+
+    if (event.httpMethod !== 'GET') {
         return {
             statusCode: 405,
             headers: corsHeaders,
