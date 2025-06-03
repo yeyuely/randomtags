@@ -715,7 +715,7 @@
                 let images = [];
 
                 for (let i = 0; i < count; i++) {
-                    let url = `${apiUrl}/images?compress=${compress}&max_size=${maxSize}`;
+                    let url = `${apiUrl}/image?compress=${compress}&max_size=${maxSize}`;
 
                     if (withTags && selectedTags.length > 0) {
                         const tagsParam = selectedTags.join(',');
