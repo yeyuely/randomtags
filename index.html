@@ -737,30 +737,7 @@
                     images.push(response);
                 }
 
-                // 从响应头获取图片信息
-                const imageId = response.headers.get('image_id');
-                const imageTags = response.headers.get('image_tags');
-                const imageSource = response.headers.get('image_source');
-
-                // 获取图片二进制数据
-                const blob = await response.blob();
-                const imageUrl = URL.createObjectURL(blob);
-
-                // 创建图片元素
-                const imageCard = document.createElement('div');
-                imageCard.className = 'image-card';
-
-                imageCard.innerHTML = `
-            <img src="${imageUrl}" alt="图片">
-            <div class="image-info">
-                <div>ID: ${imageId || '未定义'}</div>
-                <div>标签: ${imageTags || '未定义'}</div>
-                <div>来源: <a href="${imageSource}" target="_blank">查看来源</a></div>
-            </div>
-        `;
-
-                imagesContainer.appendChild(imageCard);
-                // displayImages(images);
+                displayImages(images);
                 showNotification(`成功获取 ${images.length} 张图片`, true);
             } catch (error) {
                 console.error(error);
@@ -775,18 +752,25 @@
             imagesContainer.innerHTML = '';
 
             images.forEach(img => {
-                // 假设 img 包含二进制图片数据
-                const blob = new Blob([img.data], { type: 'image/jpeg' });
+                // 从响应头获取图片信息
+                const imageId = img.headers.get('image_id');
+                const imageTags = img.headers.get('image_tags');
+                const imageSource = img.headers.get('image_source');
+
+                // 获取图片二进制数据
+                const blob = img.blob();
                 const imageUrl = URL.createObjectURL(blob);
 
+                // 创建图片元素
                 const imageCard = document.createElement('div');
                 imageCard.className = 'image-card';
 
                 imageCard.innerHTML = `
             <img src="${imageUrl}" alt="图片">
             <div class="image-info">
-                <div>ID: ${img.image_id}</div>
-                <div>标签: ${img.image_tags}</div>
+                <div>ID: ${imageId || '未定义'}</div>
+                <div>标签: ${imageTags || '未定义'}</div>
+                <div>来源: <a href="${imageSource}" target="_blank">查看来源</a></div>
             </div>
         `;
 
