@@ -338,29 +338,6 @@
             display: block;
         }
         
-        .cors-warning {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 12px 15px;
-            margin: 15px 0;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-        
-        .jsonp-status {
-            margin-top: 10px;
-            font-size: 0.85rem;
-            color: var(--gray);
-        }
-        
-        .jsonp-status.success {
-            color: #28a745;
-        }
-        
-        .jsonp-status.error {
-            color: var(--danger);
-        }
-        
         @media (max-width: 768px) {
             .grid {
                 grid-template-columns: 1fr;
@@ -400,11 +377,6 @@
             <p>随机抽取标签，获取匹配图片，支持自定义API配置</p>
         </header>
         
-        <div class="cors-warning">
-            <i class="fas fa-exclamation-triangle"></i> 注意：由于浏览器安全限制，本地访问可能会遇到跨域问题。
-            本应用已使用JSONP技术解决此问题。如遇问题，请尝试使用代理模式。
-        </div>
-        
         <div class="grid">
             <div class="card">
                 <div class="card-title">
@@ -417,15 +389,6 @@
                     <input type="text" id="api-url" class="form-control" value="https://pic.re" placeholder="输入API地址">
                 </div>
                 
-                <div class="form-group">
-                    <label for="request-mode">请求模式</label>
-                    <select id="request-mode" class="form-control">
-                        <option value="jsonp">JSONP (推荐)</option>
-                        <option value="proxy">代理模式</option>
-                    </select>
-                    <div class="jsonp-status" id="jsonp-status"></div>
-                </div>
-                
                 <div class="tabs">
                     <div class="tab active" data-tab="tags">标签设置</div>
                     <div class="tab" data-tab="images">图片设置</div>
@@ -434,10 +397,9 @@
                 <div class="tab-content active" id="tags-tab">
                     <div class="form-group">
                         <label>标签操作</label>
-                        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; gap: 10px;">
                             <button id="fetch-tags" class="btn">获取标签列表</button>
                             <button id="random-tags" class="btn btn-success">随机抽取标签</button>
-                            <button id="clear-tags" class="btn btn-outline">清除标签</button>
                         </div>
                     </div>
                     
@@ -561,7 +523,6 @@
         // 标签相关
         const fetchTagsBtn = document.getElementById('fetch-tags');
         const randomTagsBtn = document.getElementById('random-tags');
-        const clearTagsBtn = document.getElementById('clear-tags');
         const tagCountInput = document.getElementById('tag-count');
         const selectedTagsContainer = document.getElementById('selected-tags');
         const excludedTagsContainer = document.getElementById('excluded-tags');
@@ -577,16 +538,14 @@
         
         // API配置
         const apiUrlInput = document.getElementById('api-url');
-        const requestModeSelect = document.getElementById('request-mode');
-        const jsonpStatus = document.getElementById('jsonp-status');
+
+        // CORS代理
+        const proxyUrl = "https://cors-anywhere.herokuapp.com/";
         
         // 标签数组
         let allTags = [];
         let selectedTags = [];
         let excludedTags = [];
-        
-        // 全局回调计数器
-        let callbackCounter = 0;
         
         // 显示通知
         function showNotification(message, isSuccess = true) {
@@ -610,103 +569,22 @@
             }
         });
         
-        // JSONP 请求函数
-        function jsonpRequest(url, callbackName, callback) {
-            callbackCounter++;
-            const uniqueCallbackName = `jsonpCallback_${callbackCounter}`;
-            
-            // 创建全局回调函数
-            window[uniqueCallbackName] = function(data) {
-                // 清理资源
-                delete window[uniqueCallbackName];
-                document.body.removeChild(script);
-                
-                // 执行回调
-                callback(data);
-            };
-            
-            // 创建script标签
-            const script = document.createElement('script');
-            script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${uniqueCallbackName}`;
-            script.onerror = function() {
-                jsonpStatus.textContent = "JSONP请求失败，请尝试代理模式";
-                jsonpStatus.className = "jsonp-status error";
-                showNotification('JSONP请求失败，请尝试代理模式', false);
-                delete window[uniqueCallbackName];
-                document.body.removeChild(script);
-            };
-            
-            document.body.appendChild(script);
-            jsonpStatus.textContent = "JSONP请求中...";
-            jsonpStatus.className = "jsonp-status";
-        }
-        
-        // 代理请求函数
-        function proxyRequest(url, callback) {
-            // 使用公共CORS代理
-            const proxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
-            
-            fetch(proxyUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error('代理请求失败');
-                    return response.json();
-                })
-                .then(data => callback(data))
-                .catch(error => {
-                    jsonpStatus.textContent = "代理请求失败";
-                    jsonpStatus.className = "jsonp-status error";
-                    showNotification('代理请求失败: ' + error.message, false);
-                });
-        }
-        
         // 标签功能
         fetchTagsBtn.addEventListener('click', async () => {
             try {
                 const apiUrl = apiUrlInput.value;
-                const requestMode = requestModeSelect.value;
+                const response = await fetch(proxyUrl + `${apiUrl}/tags`);
                 
-                jsonpStatus.textContent = "请求中...";
-                jsonpStatus.className = "jsonp-status";
-                
-                if (requestMode === 'jsonp') {
-                    // 使用JSONP
-                    jsonpRequest(`${apiUrl}/tags`, 'callback', function(data) {
-                        if (data && data.tags) {
-                            allTags = data.tags;
-                            showNotification(`成功获取 ${allTags.length} 个标签`, true);
-                            jsonpStatus.textContent = "JSONP请求成功";
-                            jsonpStatus.className = "jsonp-status success";
-                        } else {
-                            throw new Error('标签数据格式错误');
-                        }
-                    });
-                } else {
-                    // 使用代理
-                    proxyRequest(`${apiUrl}/tags`, function(data) {
-                        if (data && data.tags) {
-                            allTags = data.tags;
-                            showNotification(`成功获取 ${allTags.length} 个标签`, true);
-                            jsonpStatus.textContent = "代理请求成功";
-                            jsonpStatus.className = "jsonp-status success";
-                        } else {
-                            throw new Error('标签数据格式错误');
-                        }
-                    });
+                if (!response.ok) {
+                    throw new Error('获取标签失败');
                 }
+                
+                allTags = await response.json();
+                showNotification(`成功获取 ${allTags.length} 个标签`, true);
             } catch (error) {
                 console.error(error);
                 showNotification('获取标签失败: ' + error.message, false);
-                jsonpStatus.textContent = "请求失败: " + error.message;
-                jsonpStatus.className = "jsonp-status error";
             }
-        });
-        
-        // 清除标签
-        clearTagsBtn.addEventListener('click', () => {
-            selectedTags = [];
-            excludedTags = [];
-            updateTagsDisplay();
-            showNotification('已清除所有标签', true);
         });
         
         randomTagsBtn.addEventListener('click', () => {
@@ -812,12 +690,9 @@
             const count = parseInt(imageCountInput.value) || 4;
             const compress = document.getElementById('compress').value;
             const maxSize = document.getElementById('max-size').value;
-            const requestMode = requestModeSelect.value;
             
             loadingElement.classList.remove('hidden');
             imagesContainer.innerHTML = '';
-            jsonpStatus.textContent = "请求中...";
-            jsonpStatus.className = "jsonp-status";
             
             try {
                 let images = [];
@@ -835,42 +710,21 @@
                         url += `&nin=${encodeURIComponent(excludeParam)}`;
                     }
                     
-                    if (requestMode === 'jsonp') {
-                        // 使用JSONP
-                        await new Promise((resolve) => {
-                            jsonpRequest(url, 'callback', function(data) {
-                                if (data && data.url) {
-                                    images.push(data);
-                                    resolve();
-                                } else {
-                                    throw new Error('图片数据格式错误');
-                                }
-                            });
-                        });
-                    } else {
-                        // 使用代理
-                        await new Promise((resolve) => {
-                            proxyRequest(url, function(data) {
-                                if (data && data.url) {
-                                    images.push(data);
-                                    resolve();
-                                } else {
-                                    throw new Error('图片数据格式错误');
-                                }
-                            });
-                        });
+                    const response = await fetch(proxyUrl + url);
+                    
+                    if (!response.ok) {
+                        throw new Error('获取图片失败');
                     }
+                    
+                    const imageData = await response.json();
+                    images.push(imageData);
                 }
                 
                 displayImages(images);
                 showNotification(`成功获取 ${images.length} 张图片`, true);
-                jsonpStatus.textContent = "请求成功";
-                jsonpStatus.className = "jsonp-status success";
             } catch (error) {
                 console.error(error);
                 showNotification('获取图片失败: ' + error.message, false);
-                jsonpStatus.textContent = "请求失败: " + error.message;
-                jsonpStatus.className = "jsonp-status error";
             } finally {
                 loadingElement.classList.add('hidden');
             }
@@ -885,7 +739,7 @@
                 imageCard.className = 'image-card';
                 
                 imageCard.innerHTML = `
-                    <img src="${img.url}" alt="随机图片" onerror="this.src='https://via.placeholder.com/300x200?text=图片加载失败'">
+                    <img src="${img.url}" alt="随机图片">
                     <div class="image-info">
                         <div>ID: ${img.id}</div>
                         <div class="image-id">尺寸: ${img.width}×${img.height}</div>
@@ -910,24 +764,33 @@
             });
         });
         
+        // 添加标签功能（示例）
+        document.addEventListener('click', (e) => {
+            if (e.target === selectedTagsContainer && allTags.length > 0) {
+                const availableTags = allTags.filter(tag => 
+                    !selectedTags.includes(tag) && !excludedTags.includes(tag));
+                
+                if (availableTags.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * availableTags.length);
+                    selectedTags.push(availableTags[randomIndex]);
+                    updateTagsDisplay();
+                }
+            }
+            
+            if (e.target === excludedTagsContainer && allTags.length > 0) {
+                const availableTags = allTags.filter(tag => 
+                    !selectedTags.includes(tag) && !excludedTags.includes(tag));
+                
+                if (availableTags.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * availableTags.length);
+                    excludedTags.push(availableTags[randomIndex]);
+                    updateTagsDisplay();
+                }
+            }
+        });
+        
         // 初始化
         updateTagsDisplay();
-        
-        // 自动测试JSONP连接
-        setTimeout(() => {
-            jsonpStatus.textContent = "尝试JSONP连接中...";
-            jsonpStatus.className = "jsonp-status";
-            
-            jsonpRequest("https://pic.re/tags", "callback", function(data) {
-                if (data && data.tags) {
-                    jsonpStatus.textContent = "JSONP连接成功";
-                    jsonpStatus.className = "jsonp-status success";
-                } else {
-                    jsonpStatus.textContent = "JSONP连接失败，请尝试代理模式";
-                    jsonpStatus.className = "jsonp-status error";
-                }
-            });
-        }, 1000);
     </script>
 </body>
 </html>
