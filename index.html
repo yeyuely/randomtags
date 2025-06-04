@@ -771,7 +771,7 @@
                 const proxyUrl = `/.netlify/functions/image-proxy?url=${encodeURIComponent(imageUrl)}`;
 
                 // 使用可靠的在线回退图片
-                const fallbackUrl = 'https://via.placeholder.com/300x200?text=Image+Not+Available';
+                const fallbackUrl = '/.netlify/functions/image-proxy?url=https://cdn.pic.re/3a/3abd7c69f16f28b4a3a5e57c27e6cc65.jpg';
 
                 imageCard.innerHTML = `
             <img src="${proxyUrl}" alt="图片" loading="lazy" 

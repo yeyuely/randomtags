@@ -1,5 +1,10 @@
 {
-  "dependencies": {
-    "node-fetch": "^3.3.2"
+  "name": "randomtags",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'Build completed' && exit 0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

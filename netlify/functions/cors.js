@@ -1,4 +1,4 @@
-exports.handler = async (event, context) => {
+export async function handler(event, context) {
     // 请将此处修改为你允许的域名，例如 'https://example.com'
     const corsHeaders = {
         'Access-Control-Allow-Origin': 'https://pic.re',
@@ -64,4 +64,4 @@ exports.handler = async (event, context) => {
             body: JSON.stringify({ error: error.message })
         };
     }
-};
+}

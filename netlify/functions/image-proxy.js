@@ -1,6 +1,3 @@
-// netlify/functions/image-proxy.js
-import fetch from 'node-fetch';
-
 export async function handler(event) {
     // 1. 允许的域名列表（扩展列表）
     const allowedDomains = [
