@@ -401,7 +401,8 @@
 
                 <div class="form-group">
                     <label for="api-url">API 地址</label>
-                    <input type="text" id="api-url" class="form-control" value="https://pic.re" placeholder="输入API地址">
+                    <input type="text" id="api-url" class="form-control" value="https://api.lolicon.app/setu/v2"
+                        placeholder="输入API地址">
                 </div>
 
                 <div class="tabs">
@@ -420,7 +421,7 @@
 
                     <div class="form-group">
                         <label for="tag-count">随机抽取数量</label>
-                        <input type="number" id="tag-count" class="form-control" min="1" max="10" value="3">
+                        <input type="number" id="tag-count" class="form-control" min="1" max="10" value="1">
                     </div>
 
                     <div class="form-group">
@@ -555,7 +556,7 @@
         const apiUrlInput = document.getElementById('api-url');
 
         // CORS代理
-        const proxyUrl = "/.netlify/functions/cors?url=";
+        let proxyUrl = "/.netlify/functions/cors?url=";
 
         // 标签数组
         let allTags = [];
@@ -588,7 +589,7 @@
         fetchTagsBtn.addEventListener('click', async () => {
             try {
                 const apiUrl = apiUrlInput.value;
-                const response = await fetch(proxyUrl + `${apiUrl}/tags`);
+                const response = await fetch(proxyUrl + `https://pic.re/tags`);
 
                 if (!response.ok) {
                     throw new Error('获取标签失败');
@@ -715,17 +716,33 @@
                 let images = [];
 
                 for (let i = 0; i < count; i++) {
-                    let url = `${apiUrl}/image.json?compress=${compress}&max_size=${maxSize}`;
+                    let url = '';
+
+                    if (apiUrlInput !== 'https://pic.re') {
+                        url = `${apiUrl}`;
+                        proxyUrl = "/.netlify/functions/p?url="
+                    }
+                    else {
+                        url = `${apiUrl}/image.json?compress=${compress}&max_size=${maxSize}`;
+                    }
 
                     if (withTags && selectedTags.length > 0) {
-                        const tagsParam = selectedTags.join(',');
-                        url += `&in=${encodeURIComponent(tagsParam)}`;
+                        let tagsParam = '';
+                        // let url = '';
+                        if (apiUrlInput !== 'https://pic.re') {
+                            tagsParam = selectedTags.join('|')
+                            url += `?keyword=${encodeURIComponent(tagsParam)}`;
+                        }
+                        else {
+                            tagsParam = selectedTags.join(',')
+                            url += `&in=${encodeURIComponent(tagsParam)}`;
+                        }
                     }
 
-                    if (excludedTags.length > 0) {
-                        const excludeParam = excludedTags.join(',');
-                        url += `&nin=${encodeURIComponent(excludeParam)}`;
-                    }
+                    // if (excludedTags.length > 0) {
+                    //     const excludeParam = excludedTags.join(',');
+                    //     url += `&nin=${encodeURIComponent(excludeParam)}`;
+                    // }
 
                     const response = await fetch(proxyUrl + url);
 
@@ -757,23 +774,24 @@
                 // 解析 JSON 数据
                 const data = imageData;
 
-                // 从 JSON 中获取图片信息
-                const imageId = data._id || '未定义';
-                const imageTags = data.tags ? data.tags.join(', ') : '未定义';
-                const imageSource = data.source || '#';
-                const imageUrl = data.file_url;
+                if (apiUrlInput !== 'https://pic.re') {
+                    // 从 JSON 中获取图片信息
+                    const imageId = imageData.data[0].pid || '未定义';
+                    const imageTags = imageData.data[0].tags ? imageData.data[0].tags.join(', ') : '未定义';
+                    const imageSource = imageData.data[0].urls.original || '#';
+                    const imageUrl = imageData.data[0].urls.original;
 
-                // 创建图片元素容器
-                const imageCard = document.createElement('div');
-                imageCard.className = 'image-card';
+                    // 创建图片元素容器
+                    const imageCard = document.createElement('div');
+                    imageCard.className = 'image-card';
 
-                // 使用代理获取图片
-                const proxyUrl = `/.netlify/functions/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+                    // 使用代理获取图片
+                    const proxyUrl = `/.netlify/functions/image-proxy?url=${encodeURIComponent(imageUrl)}`;
 
-                // 使用可靠的在线回退图片
-                const fallbackUrl = '/.netlify/functions/image-proxy?url=https://cdn.pic.re/3a/3abd7c69f16f28b4a3a5e57c27e6cc65.jpg';
+                    // 使用可靠的在线回退图片
+                    const fallbackUrl = '/.netlify/functions/image-proxy?url=https://cdn.pic.re/3a/3abd7c69f16f28b4a3a5e57c27e6cc65.jpg';
 
-                imageCard.innerHTML = `
+                    imageCard.innerHTML = `
             <img src="${proxyUrl}" alt="图片" loading="lazy" 
                  onerror="this.onerror=null;this.src='${fallbackUrl}';">
             <div class="image-info">
@@ -785,7 +803,39 @@
             </div>
         `;
 
-                imagesContainer.appendChild(imageCard);
+                    imagesContainer.appendChild(imageCard);
+                }
+                else {
+                    // 从 JSON 中获取图片信息
+                    const imageId = data._id || '未定义';
+                    const imageTags = data.tags ? data.tags.join(', ') : '未定义';
+                    const imageSource = data.source || '#';
+                    const imageUrl = data.file_url;
+
+                    // 创建图片元素容器
+                    const imageCard = document.createElement('div');
+                    imageCard.className = 'image-card';
+
+                    // 使用代理获取图片
+                    const proxyUrl = `/.netlify/functions/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+
+                    // 使用可靠的在线回退图片
+                    const fallbackUrl = '/.netlify/functions/image-proxy?url=https://cdn.pic.re/3a/3abd7c69f16f28b4a3a5e57c27e6cc65.jpg';
+
+                    imageCard.innerHTML = `
+            <img src="${proxyUrl}" alt="图片" loading="lazy" 
+                 onerror="this.onerror=null;this.src='${fallbackUrl}';">
+            <div class="image-info">
+                <div>ID: ${imageId}</div>
+                <div>标签: ${imageTags}</div>
+                <div>来源: <a href="${imageSource}" target="_blank">查看来源</a></div>
+                <div>尺寸: ${data.width}×${data.height}</div>
+                <div>作者: ${data.author || '未知'}</div>
+            </div>
+        `;
+
+                    imagesContainer.appendChild(imageCard);
+                }
             } catch (error) {
                 console.error('Error displaying image:', error);
             }

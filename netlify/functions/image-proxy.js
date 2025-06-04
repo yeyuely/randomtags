@@ -4,8 +4,10 @@ export async function handler(event) {
         'konachan.com',
         'pic.re',
         'cdn.pic.re',  // 添加这个
+        'i.pixiv.re',
         'i.pixiv.cat',
         'i.pximg.net',
+        'api.lolicon.app',
         'venerable-moonbeam-0ba3bf.netlify.app' // 允许本地测试
     ];
     
